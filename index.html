@@ -6,34 +6,42 @@
 <title>Zelle Payment Notes Prototype</title>
 <style>
 :root{
-  --bg:#e8e8ed; --surface:#fff; --ink:#16181d; --muted:#6b7079; --line:#e6e7ec;
-  --soft:#f2f3f6; --accent:#1a5fb4; --accent-soft:#e7eef9; --pos:#1d7a3a; --mark:#ffe46b;
+  --bg:#f4f1ea; --surface:#fff; --ink:#16181d; --muted:#6b7079; --line:#e6e7ec;
+  --soft:#f2f3f6; --accent:#0f766e; --accent-soft:#e2f1ee; --pos:#1d7a3a; --mark:#ffe46b;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 .wrap{min-height:100vh;display:flex;gap:56px;align-items:center;justify-content:center;padding:32px 24px}
 
-/* ---------- Side panel ---------- */
-.panel{width:300px;flex:none;font-size:14px;line-height:1.45}
-.eyebrow{font-size:12px;color:var(--muted)}
-.panel h1{font-size:26px;margin:4px 0 14px;letter-spacing:-.01em}
-.box{background:#fff;border-radius:10px;padding:12px 14px}
-.panel h2{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:22px 0 8px}
-.start{display:block;width:100%;text-align:left;background:#fff;border:1px solid transparent;border-radius:10px;padding:10px 12px;margin-bottom:6px;font:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
-.start:hover{border-color:#c9cbd3}
-.start.on{border-color:var(--accent);color:var(--accent);font-weight:600}
-.tasks{margin:0;padding-left:20px}
-.tasks li{margin-bottom:8px}
-.tasks li::marker{color:var(--muted);font-weight:600}
-.reset{background:none;border:0;color:var(--accent);font:inherit;font-size:14px;padding:0;cursor:pointer}
-.fine{font-size:12px;color:#8a8e97;margin-top:22px}
+/* ---------- Guide (left) ---------- */
+.guide{width:340px;flex:none;font-size:15px;line-height:1.5}
+.badge{display:inline-block;font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:3px 8px}
+.guide h1{font-family:Georgia,"Times New Roman",serif;font-weight:600;font-size:32px;line-height:1.15;margin:12px 0 10px;letter-spacing:-.01em}
+.lead{color:#4a4f58;margin:0 0 6px}
+.guide h2{font-size:13px;font-weight:700;margin:22px 0 10px}
+.task{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #e3ded3;border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;position:relative;transition:border-color .15s,background .15s}
+.task:hover{border-color:#cfc8b9}
+.task input{position:absolute;opacity:0;pointer-events:none}
+.task .tick{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid #c9c3b6;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;margin-top:1px;transition:all .15s}
+.task.done{background:#f0f7f5;border-color:#b9ddd5}
+.task.done .tick{background:var(--accent);border-color:var(--accent);color:#fff}
+.task.done .txt{color:var(--muted)}
+.task .n{font-weight:700;margin-right:6px}
+.task input:focus-visible + .tick{outline:2px solid var(--accent);outline-offset:2px}
+.jumps{display:flex;flex-wrap:wrap;gap:8px}
+.jump{border:1px solid #d9d3c6;background:transparent;border-radius:999px;padding:7px 14px;font:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
+.jump:hover{background:#fff}
+.jump.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.resetbtn{margin-top:16px;border:0;background:none;font:inherit;font-size:14px;color:var(--accent);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.note-foot{font-size:12.5px;color:#8b8578;margin-top:24px;border-top:1px solid #e3ded3;padding-top:12px}
 
-/* ---------- Phone ---------- */
-.phone{width:393px;height:min(852px,calc(100vh - 48px));flex:none;background:var(--surface);border-radius:52px;overflow:hidden;position:relative;
-  display:flex;flex-direction:column;box-shadow:0 0 0 11px #15161a,0 0 0 13px #3a3b40,0 30px 70px rgba(0,0,0,.28)}
-.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#000;z-index:20}
-.status{height:54px;flex:none;display:flex;justify-content:space-between;align-items:flex-end;padding:0 34px 8px;font-size:15px;font-weight:600}
+/* ---------- Phone (right) ---------- */
+.wrap{min-height:100vh;display:flex;gap:64px;align-items:center;justify-content:center;padding:32px 24px}
+.phone{width:393px;height:min(852px,calc(100vh - 48px));flex:none;background:var(--surface);border-radius:40px;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;border:9px solid #2a2c31;box-shadow:0 18px 50px rgba(60,50,30,.18)}
+.cam{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:10px;height:10px;border-radius:50%;background:#2a2c31;z-index:20}
+.status{height:46px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:4px 26px 0;font-size:14px;font-weight:600}
 .status svg{display:block}
 #screen{flex:1;min-height:0;position:relative;overflow:hidden}
 .view{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--surface)}
@@ -45,20 +53,20 @@ body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSys
 @keyframes pop{from{transform:translateX(-25%);opacity:.3}to{transform:none;opacity:1}}
 @keyframes up{from{transform:translateY(30%);opacity:.2}to{transform:none;opacity:1}}
 @keyframes fade{from{opacity:0}to{opacity:1}}
-.homebar{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#16181d;z-index:20}
+.homebar{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:120px;height:4px;border-radius:2px;background:#2a2c31;z-index:20}
 
 /* screenshot mode: index.html?shot#preset */
 body.shot{background:#fff}
 body.shot .wrap{display:block;padding:0;min-height:0}
-body.shot .panel,body.shot .island{display:none}
-body.shot .phone{border-radius:0;box-shadow:none;width:393px!important;height:852px!important}
+body.shot .guide,body.shot .cam{display:none}
+body.shot .phone{border:0;border-radius:0;box-shadow:none;width:393px!important;height:852px!important}
 
-/* phones and narrow windows: the prototype fills the screen, panel below */
+/* phones and narrow windows: prototype fills the screen, guide below */
 @media (max-width:760px){
   .wrap{flex-direction:column;gap:0;padding:0;align-items:stretch}
-  .phone{width:100%;height:100vh;height:100dvh;border-radius:0;box-shadow:none}
-  .island{display:none}
-  .panel{width:auto;padding:24px 16px 40px}
+  .phone{width:100%;height:100vh;height:100dvh;border:0;border-radius:0;box-shadow:none}
+  .cam{display:none}
+  .guide{width:auto;order:2;padding:24px 16px 40px}
 }
 
 /* ---------- App UI ---------- */
@@ -146,35 +154,35 @@ textarea.field{height:140px;resize:none;line-height:1.4}
 </head>
 <body>
 <div class="wrap">
+  <aside class="guide">
+    <span class="badge">CS6750 &middot; Final prototype</span>
+    <h1>Finding the note on a past Zelle payment</h1>
+    <p class="lead">You and your roommate Sam split the bills, and you pay your share with Zelle. Months later, you want to check what some of those payments were for.</p>
+
+    <h2>Your three tasks</h2>
+    <label class="task"><input type="checkbox"><span class="tick">&#10003;</span><span class="txt"><span class="n">1</span>Find the September payment whose note mentions electricity, and note the amount.</span></label>
+    <label class="task"><input type="checkbox"><span class="tick">&#10003;</span><span class="txt"><span class="n">2</span>Find out what you paid Sam for in August.</span></label>
+    <label class="task"><input type="checkbox"><span class="tick">&#10003;</span><span class="txt"><span class="n">3</span>Send Sam a payment with a note you'd recognize later. Then add a private memo to Sam's Oct&nbsp;2 payment (its note just says "payment") and find it again by searching.</span></label>
+
+    <h2>Jump to</h2>
+    <div class="jumps">
+      <button class="jump" data-start="activity">Checking activity</button>
+      <button class="jump" data-start="compose">Send to Sam</button>
+      <button class="jump" data-start="vague">The Oct 2 payment</button>
+    </div>
+    <button class="resetbtn" id="reset">Reset the demo</button>
+
+    <p class="note-foot">A class-project mock-up with made-up payments. It isn't a Chase or Zelle product, no money moves, and nothing you type leaves this page.</p>
+  </aside>
+
   <div class="phone" aria-label="Prototype phone screen">
-    <div class="island"></div>
+    <div class="cam"></div>
     <div class="status"><span>9:41</span>
-      <svg width="68" height="12" viewBox="0 0 68 12" aria-hidden="true"><g fill="#16181d"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="6" width="3" height="6" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></g><rect x="40" y="1" width="24" height="10" rx="3" fill="none" stroke="#16181d"/><rect x="42" y="3" width="17" height="6" rx="1.5" fill="#16181d"/><rect x="65" y="4" width="2" height="4" rx="1" fill="#16181d"/></svg>
+      <svg width="58" height="12" viewBox="0 0 58 12" aria-hidden="true"><g fill="#16181d"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="6" width="3" height="6" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></g><rect x="31" y="1" width="23" height="10" rx="2.5" fill="none" stroke="#16181d"/><rect x="33" y="3" width="15" height="6" rx="1" fill="#16181d"/><rect x="55" y="4" width="2" height="4" rx="1" fill="#16181d"/></svg>
     </div>
     <div id="screen"></div>
     <div class="homebar"></div>
   </div>
-
-  <aside class="panel">
-    <div class="eyebrow">CS6750 class project · medium-fidelity prototype</div>
-    <h1>Zelle Payment Notes</h1>
-    <div class="box"><b>Scenario.</b> You split bills with your roommate Sam and pay your share with Zelle from your checking account. A few months later, you need to check what some of those payments were for.</div>
-
-    <h2>Start from</h2>
-    <button class="start" data-start="activity">Checking activity</button>
-    <button class="start" data-start="compose">Sending a payment to Sam</button>
-    <button class="start" data-start="vague">An old payment with a vague note</button>
-
-    <h2>Tasks</h2>
-    <ol class="tasks">
-      <li>Find the September payment whose note mentions electricity. Note the amount.</li>
-      <li>Find out what you paid Sam for in August.</li>
-      <li>Send Sam a payment with a note you would recognize later. Then give Sam's Oct 2 payment, whose note just says "payment", a private memo, and find it again by searching.</li>
-    </ol>
-    <button class="reset" id="reset">&#8634; Start over</button>
-
-    <div class="fine">Sample data. No money is sent and no real account is used. Not made by or affiliated with Chase or Zelle.</div>
-  </aside>
 </div>
 
 <script>
@@ -440,7 +448,7 @@ function render(){
   $('#screen').innerHTML = `<div class="view ${anim}">${VIEWS[S.view]()}</div>`;
   if (S.view === 'activity') renderList();
   if (S.view === 'memo' && !document.body.classList.contains('shot')) $('#memo').focus();
-  document.querySelectorAll('.start').forEach(b => b.classList.toggle('on', b.dataset.start === S.from));
+  document.querySelectorAll('.jump').forEach(b => b.classList.toggle('on', b.dataset.start === S.from));
 }
 function toast(msg){
   const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
@@ -494,8 +502,8 @@ $('#screen').addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.id === 'note'){ ACT.review(); }
 });
 
-// Side panel: start points and reset
-document.querySelectorAll('.start').forEach(b => b.addEventListener('click', () => {
+// Guide: jump-to shortcuts, task checklist, reset
+document.querySelectorAll('.jump').forEach(b => b.addEventListener('click', () => {
   const keep = S.pay;   // keep anything the user already sent or wrote
   reset(); S.pay = keep;
   if (b.dataset.start === 'compose'){ S.view = 'compose'; S.from = 'compose'; }
@@ -503,6 +511,7 @@ document.querySelectorAll('.start').forEach(b => b.addEventListener('click', () 
   lastView = 'activity'; render();
 }));
 $('#reset').addEventListener('click', () => { reset(); render(); });
+document.querySelectorAll('.task input').forEach(i => i.addEventListener('change', () => i.closest('.task').classList.toggle('done', i.checked)));
 
 /* Presets for paper screenshots: index.html?shot#sam-aug */
 const PRESETS = {
