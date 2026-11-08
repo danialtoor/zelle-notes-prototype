@@ -24,9 +24,9 @@ body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSys
 .task:hover{border-color:#cfc8b9}
 .task input{position:absolute;opacity:0;pointer-events:none}
 .task .tick{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid #c9c3b6;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;margin-top:1px;transition:all .15s}
-.task.done{background:#f0f7f5;border-color:#b9ddd5}
-.task.done .tick{background:var(--accent);border-color:var(--accent);color:#fff}
-.task.done .txt{color:var(--muted)}
+.task.is-done{background:#f0f7f5;border-color:#b9ddd5}
+.task.is-done .tick{background:var(--accent);border-color:var(--accent);color:#fff}
+.task.is-done .txt{color:var(--muted)}
 .task .n{font-weight:700;margin-right:6px}
 .task input:focus-visible + .tick{outline:2px solid var(--accent);outline-offset:2px}
 .jumps{display:flex;flex-wrap:wrap;gap:8px}
@@ -547,7 +547,7 @@ document.querySelectorAll('.jump').forEach(b => b.addEventListener('click', () =
     lastView = 'activity'; render();
 }));
 $('#reset').addEventListener('click', () => { reset(); render(); });
-document.querySelectorAll('.task input').forEach(i => i.addEventListener('change', () => i.closest('.task').classList.toggle('done', i.checked)));
+document.querySelectorAll('.task input').forEach(i => i.addEventListener('change', () => i.closest('.task').classList.toggle('is-done', i.checked)));
 
 /* Presets for paper screenshots: index.html?shot#sam-aug */
 const PRESETS = {
