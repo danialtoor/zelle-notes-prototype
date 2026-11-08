@@ -34,6 +34,9 @@ body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSys
 .jump{display:inline-flex;align-items:center;gap:8px;padding-left:7px}
 .jn{width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
 .jump.on .jn{background:#fff;color:var(--ink)}
+.for{font-size:11.5px;color:var(--muted);border-left:1px solid #d9d3c6;padding-left:8px;margin-left:2px}
+.jump.on .for{color:#c9ccd3;border-left-color:#555}
+.jump-help{font-size:13px;color:var(--muted);margin:-4px 0 10px}
 .jump:hover{background:#fff}
 .jump.on{background:var(--ink);border-color:var(--ink);color:#fff}
 .resetbtn{margin-top:16px;border:0;background:none;font:inherit;font-size:14px;color:var(--accent);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
@@ -167,11 +170,12 @@ textarea.field{height:140px;resize:none;line-height:1.4}
     <label class="task"><input type="checkbox"><span class="tick">&#10003;</span><span class="txt"><span class="n">2</span>Find out what you paid Sam for in August.</span></label>
     <label class="task"><input type="checkbox"><span class="tick">&#10003;</span><span class="txt"><span class="n">3</span>Send Sam a payment with a note you'd recognize later. Then add a private memo to Sam's Oct&nbsp;2 payment (its note just says "payment") and find it again by searching.</span></label>
 
-    <h2>Jump to</h2>
+    <h2>Shortcuts</h2>
+    <p class="jump-help">Jump straight to a screen. The tag on each one shows which task it helps with.</p>
     <div class="jumps">
-      <button class="jump" data-start="activity"><span class="jn">1</span>Checking activity</button>
-      <button class="jump" data-start="compose"><span class="jn">2</span>Send to Sam</button>
-      <button class="jump" data-start="vague"><span class="jn">3</span>The Oct 2 payment</button>
+      <button class="jump" data-start="activity"><span class="jn">A</span>Checking activity<span class="for">Tasks 1, 2</span></button>
+      <button class="jump" data-start="compose"><span class="jn">B</span>Send to Sam<span class="for">Task 3</span></button>
+      <button class="jump" data-start="vague"><span class="jn">C</span>The Oct 2 payment<span class="for">Task 3</span></button>
     </div>
     <button class="resetbtn" id="reset">Reset the demo</button>
 
