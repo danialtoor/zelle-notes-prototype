@@ -136,6 +136,10 @@ mark{background:var(--mark);color:inherit;border-radius:2px;padding:0 1px}
 .foot{padding:12px 20px 30px;flex:none}
 .field{width:100%;border:1px solid #d6d8de;border-radius:12px;padding:12px 14px;font:inherit;font-size:16px;outline:none;color:var(--ink);background:#fff}
 .field:focus{border-color:var(--accent)}
+.notewrap{position:relative}
+.ghost{position:absolute;inset:0;display:flex;align-items:center;padding:0 14px;border:1px solid transparent;font-size:16px;color:#9aa0a8;pointer-events:none;white-space:pre;overflow:hidden}
+.ghost .typed{visibility:hidden}
+.ghost .key{margin-left:auto;padding:1px 7px;font-size:11px;color:var(--muted);background:#fff;border:1px solid #d6d8de;border-radius:5px}
 textarea.field{height:140px;resize:none;line-height:1.4}
 .same{display:block;width:100%;text-align:left;margin-top:10px;border:1px solid #d6d8de;background:var(--soft);border-radius:12px;padding:10px 14px;font:inherit;cursor:pointer;color:var(--ink)}
 .same:hover{border-color:#b9bcc5}
@@ -397,12 +401,25 @@ function assistHTML(){
       <div class="chips" style="margin-top:4px">
         ${['Nov electricity','Nov wifi','Rent'].map(s => `<button class="chip" data-act="sugg" data-arg="${s}">${s}</button>`).join('')}
       </div>
-      ${last ? `<button class="same" data-act="same"><b>&#8635; Same as last time</b><span>${esc(last)} &rarr; ${esc(toNov(last))}</span></button>` : ''}`;
+      ${last ? `<button class="same" data-act="same"><b>&#8635; Same as last time</b><span>Tap to fill in "${esc(toNov(last))}", or press the &rarr; key in the note box</span></button>` : ''}`;
   }
   if (isVague(n) && !S.skip){
     return `<div class="hint">Add a detail you'll want later? Try: <button data-act="sugg" data-arg="Nov electricity">Nov electricity</button><button class="skip" data-act="skip">Skip</button></div>`;
   }
   return '';
+}
+// Grey suggestion inside the note box; the right arrow or Tab accepts it
+function ghostHTML(){
+  const sug = toNov(lastGoodNote()), n = S.note;
+  if (!sug) return '';
+  if (!n) return `${esc(sug)}<span class="key">&rarr; to fill</span>`;
+  if (sug.toLowerCase().startsWith(n.toLowerCase()) && n.length < sug.length)
+    return `<span class="typed">${esc(n)}</span>${esc(sug.slice(n.length))}<span class="key">&rarr;</span>`;
+  return '';
+}
+function acceptGhost(){
+  S.note = toNov(lastGoodNote()); if (!S.tag) S.tag = 'Utilities'; render();
+  const i = $('#note'); i.focus(); i.setSelectionRange(S.note.length, S.note.length);
 }
 function viewCompose(){
   return `
@@ -410,7 +427,7 @@ function viewCompose(){
   <div class="scroll pad">
     <div class="hero" style="padding-bottom:10px"><div class="av lg">S</div><div style="font-size:17px">Sam</div><div class="amt-big">$${SEND_AMT.toFixed(2)}</div></div>
     <div class="lbl">Note (Sam will see this)</div>
-    <input id="note" class="field" type="text" autocomplete="off" placeholder="e.g., Nov electricity, my half" value="${esc(S.note)}" aria-label="Note">
+    <div class="notewrap"><input id="note" class="field" type="text" autocomplete="off" value="${esc(S.note)}" aria-label="Note"><div class="ghost" id="ghost" aria-hidden="true">${ghostHTML()}</div></div>
     <div id="assist">${assistHTML()}</div>
     <div class="section"><div class="lbl">Purpose (optional)</div>
       <div class="chips" style="margin-top:4px">${TAGS.map(t => `<button class="chip ${S.tag === t ? 'on' : ''}" data-act="tag" data-arg="${t}">${t}</button>`).join('')}</div></div>
@@ -478,7 +495,7 @@ const ACT = {
   zelle: () => toast('Opens this payment in Zelle activity'),
   compose: () => { S.view = 'compose'; S.from = 'compose'; clearCompose(); render(); },
   sugg: a => { S.note = a; render(); },
-  same: () => { S.note = toNov(lastGoodNote()); S.tag = 'Utilities'; render(); },
+  same: () => acceptGhost(),
   skip: () => { S.skip = true; $('#assist').innerHTML = assistHTML(); },
   tag: a => { S.tag = S.tag === a ? null : a; render(); },
   review: () => { S.view = 'review'; render(); },
@@ -501,11 +518,14 @@ $('#screen').addEventListener('click', e => {
 });
 $('#screen').addEventListener('input', e => {
   if (e.target.id === 'q'){ S.q = e.target.value; renderList(); }
-  if (e.target.id === 'note'){ S.note = e.target.value; $('#assist').innerHTML = assistHTML(); }
+  if (e.target.id === 'note'){ S.note = e.target.value; $('#assist').innerHTML = assistHTML(); $('#ghost').innerHTML = ghostHTML(); }
 });
 $('#screen').addEventListener('keydown', e => {
   if (e.key === 'Escape' && S.sheet){ S.sheet = null; render(); }
   if (e.key === 'Enter' && e.target.id === 'note'){ ACT.review(); }
+  if ((e.key === 'ArrowRight' || e.key === 'Tab') && e.target.id === 'note' && $('#ghost').innerHTML && e.target.selectionStart === S.note.length){
+    e.preventDefault(); acceptGhost();
+  }
 });
 
 // Guide: jump-to shortcuts, task checklist, reset
