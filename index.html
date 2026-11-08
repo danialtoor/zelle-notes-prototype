@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Zelle Payment Notes Prototype</title>
+<style>
+:root{
+  --bg:#e8e8ed; --surface:#fff; --ink:#16181d; --muted:#6b7079; --line:#e6e7ec;
+  --soft:#f2f3f6; --accent:#1a5fb4; --accent-soft:#e7eef9; --pos:#1d7a3a; --mark:#ffe46b;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{min-height:100vh;display:flex;gap:56px;align-items:center;justify-content:center;padding:32px 24px}
+
+/* ---------- Side panel ---------- */
+.panel{width:300px;flex:none;font-size:14px;line-height:1.45}
+.eyebrow{font-size:12px;color:var(--muted)}
+.panel h1{font-size:26px;margin:4px 0 14px;letter-spacing:-.01em}
+.box{background:#fff;border-radius:10px;padding:12px 14px}
+.panel h2{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:22px 0 8px}
+.start{display:block;width:100%;text-align:left;background:#fff;border:1px solid transparent;border-radius:10px;padding:10px 12px;margin-bottom:6px;font:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
+.start:hover{border-color:#c9cbd3}
+.start.on{border-color:var(--accent);color:var(--accent);font-weight:600}
+.tasks{margin:0;padding-left:20px}
+.tasks li{margin-bottom:8px}
+.tasks li::marker{color:var(--muted);font-weight:600}
+.reset{background:none;border:0;color:var(--accent);font:inherit;font-size:14px;padding:0;cursor:pointer}
+.fine{font-size:12px;color:#8a8e97;margin-top:22px}
+
+/* ---------- Phone ---------- */
+.phone{width:393px;height:min(852px,calc(100vh - 48px));flex:none;background:var(--surface);border-radius:52px;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;box-shadow:0 0 0 11px #15161a,0 0 0 13px #3a3b40,0 30px 70px rgba(0,0,0,.28)}
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:34px;border-radius:20px;background:#000;z-index:20}
+.status{height:54px;flex:none;display:flex;justify-content:space-between;align-items:flex-end;padding:0 34px 8px;font-size:15px;font-weight:600}
+.status svg{display:block}
+#screen{flex:1;min-height:0;position:relative;overflow:hidden}
+.view{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--surface)}
+.view.push{animation:push .28s cubic-bezier(.2,.8,.2,1)}
+.view.pop{animation:pop .28s cubic-bezier(.2,.8,.2,1)}
+.view.up{animation:up .32s cubic-bezier(.2,.8,.2,1)}
+.view.fade{animation:fade .25s ease}
+@keyframes push{from{transform:translateX(40%);opacity:.3}to{transform:none;opacity:1}}
+@keyframes pop{from{transform:translateX(-25%);opacity:.3}to{transform:none;opacity:1}}
+@keyframes up{from{transform:translateY(30%);opacity:.2}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.homebar{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#16181d;z-index:20}
+
+/* screenshot mode: index.html?shot#preset */
+body.shot{background:#fff}
+body.shot .wrap{display:block;padding:0;min-height:0}
+body.shot .panel,body.shot .island{display:none}
+body.shot .phone{border-radius:0;box-shadow:none;width:393px!important;height:852px!important}
+
+/* phones and narrow windows: the prototype fills the screen, panel below */
+@media (max-width:760px){
+  .wrap{flex-direction:column;gap:0;padding:0;align-items:stretch}
+  .phone{width:100%;height:100vh;height:100dvh;border-radius:0;box-shadow:none}
+  .island{display:none}
+  .panel{width:auto;padding:24px 16px 40px}
+}
+
+/* ---------- App UI ---------- */
+.top{padding:0 20px 8px;flex:none}
+.topbar{height:44px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
+.topbar>:last-child{justify-self:end}
+.title{font-size:17px;font-weight:600}
+.h1{font-size:26px;font-weight:700;margin:0 0 2px;letter-spacing:-.01em}
+.sub{font-size:14px;color:var(--muted)}
+.link{color:var(--accent);background:none;border:0;font:inherit;font-size:16px;padding:0;cursor:pointer;justify-self:start}
+.pill{background:var(--accent);color:#fff;border:0;border-radius:999px;padding:7px 16px;font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.pill:active,.btn:active{transform:scale(.97)}
+.search{display:flex;align-items:center;gap:8px;background:var(--soft);border-radius:12px;padding:0 12px;height:42px;margin-top:12px;border:1.5px solid transparent;transition:border-color .15s}
+.search:focus-within{border-color:var(--accent);background:#fff}
+.search input{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:16px;outline:none;color:var(--ink)}
+.search .clear{border:0;background:#c4c6cd;color:#fff;width:18px;height:18px;border-radius:50%;font-size:12px;line-height:18px;padding:0;cursor:pointer}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chip{border:1px solid #d6d8de;background:#fff;color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s,border-color .15s}
+.chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+.chip .x{font-weight:400;font-size:15px;line-height:1;padding:0 2px}
+.chip .caret{font-size:10px;color:var(--muted)}
+.count{font-size:13px;color:var(--muted);padding:6px 20px;flex:none;border-bottom:1px solid var(--line)}
+.scroll{flex:1;min-height:0;overflow-y:auto;padding-bottom:24px}
+.row{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:#fff;padding:12px 20px;font:inherit;color:inherit;cursor:pointer;transition:background .12s}
+.row:hover{background:#fafafc}
+.row:active{background:#eef0f4}
+.row.flash{animation:flash 1.8s ease}
+@keyframes flash{0%,40%{background:#e5f3e9}100%{background:#fff}}
+.r1,.r2{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.r1{font-size:16px;font-weight:500}
+.r2{font-size:14px;color:var(--muted);margin-top:3px}
+.r2 .note{font-style:italic;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.r2 .date{flex:none}
+.memo{font-size:13px;color:var(--muted);margin-top:3px}
+.memo b{font-weight:600}
+.pos{color:var(--pos)}
+mark{background:var(--mark);color:inherit;border-radius:2px;padding:0 1px}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.backdrop{position:absolute;inset:0;background:rgba(0,0,0,.32);display:flex;align-items:flex-end;z-index:5;animation:fade .2s ease}
+.sheet{background:#fff;width:100%;border-radius:16px 16px 0 0;padding:8px 0 30px;animation:sheet .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes sheet{from{transform:translateY(100%)}to{transform:none}}
+.grab{width:36px;height:5px;border-radius:3px;background:#d4d5db;margin:0 auto 8px}
+.sheet h3{font-size:17px;margin:4px 20px 8px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;border:0;background:#fff;padding:12px 20px;font:inherit;font-size:16px;text-align:left;cursor:pointer;color:var(--ink)}
+.opt:hover{background:#fafafc}
+.opt .tick{margin-left:auto;color:var(--accent);font-weight:700}
+.opt .meta{margin-left:auto;font-size:13px;color:var(--muted)}
+.opt.clear{color:var(--accent)}
+.av{width:34px;height:34px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+.av.lg{width:56px;height:56px;font-size:22px}
+.pad{padding:0 20px}
+.hero{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 0 18px}
+.amt-big{font-size:34px;font-weight:700}
+.card{background:var(--soft);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.lbl{font-size:13px;color:var(--muted);margin-bottom:4px}
+.val{font-size:16px}
+.val.it{font-style:italic}
+.btn{display:block;width:100%;height:50px;border-radius:12px;border:0;background:var(--accent);color:#fff;font:inherit;font-size:17px;font-weight:600;cursor:pointer;transition:transform .1s}
+.btn.secondary{background:var(--accent-soft);color:var(--accent)}
+.foot{padding:12px 20px 30px;flex:none}
+.field{width:100%;border:1px solid #d6d8de;border-radius:12px;padding:12px 14px;font:inherit;font-size:16px;outline:none;color:var(--ink);background:#fff}
+.field:focus{border-color:var(--accent)}
+textarea.field{height:140px;resize:none;line-height:1.4}
+.same{display:block;width:100%;text-align:left;margin-top:10px;border:1px solid #d6d8de;background:var(--soft);border-radius:12px;padding:10px 14px;font:inherit;cursor:pointer;color:var(--ink)}
+.same:hover{border-color:#b9bcc5}
+.same b{font-size:15px}
+.same span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.hint{font-size:13px;color:var(--muted);margin-top:8px;display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;animation:fade .2s ease}
+.hint button{border:0;background:none;color:var(--accent);font:inherit;font-size:13px;padding:0;cursor:pointer}
+.hint .skip{margin-left:auto;color:var(--muted);text-decoration:underline}
+.section{margin-top:18px}
+.kv{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line);font-size:16px}
+.kv span:first-child{color:var(--muted)}
+.kv span:last-child{text-align:right}
+.done{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:0 30px}
+.check{width:72px;height:72px;border-radius:50%;background:var(--pos);color:#fff;display:flex;align-items:center;justify-content:center;font-size:38px;margin-bottom:8px;animation:pop-in .35s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop-in{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+.spinner{width:44px;height:44px;border-radius:50%;border:4px solid var(--accent-soft);border-top-color:var(--accent);animation:spin .8s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tip{font-size:13px;color:var(--muted);background:var(--soft);border-radius:10px;padding:10px 12px;margin-top:14px;text-align:left}
+.toast{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);background:#16181d;color:#fff;font-size:14px;padding:9px 14px;border-radius:10px;z-index:9;white-space:nowrap;animation:fade .2s ease}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="phone" aria-label="Prototype phone screen">
+    <div class="island"></div>
+    <div class="status"><span>9:41</span>
+      <svg width="68" height="12" viewBox="0 0 68 12" aria-hidden="true"><g fill="#16181d"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="6" width="3" height="6" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></g><rect x="40" y="1" width="24" height="10" rx="3" fill="none" stroke="#16181d"/><rect x="42" y="3" width="17" height="6" rx="1.5" fill="#16181d"/><rect x="65" y="4" width="2" height="4" rx="1" fill="#16181d"/></svg>
+    </div>
+    <div id="screen"></div>
+    <div class="homebar"></div>
+  </div>
+
+  <aside class="panel">
+    <div class="eyebrow">CS6750 class project · medium-fidelity prototype</div>
+    <h1>Zelle Payment Notes</h1>
+    <div class="box"><b>Scenario.</b> You split bills with your roommate Sam and pay your share with Zelle from your checking account. A few months later, you need to check what some of those payments were for.</div>
+
+    <h2>Start from</h2>
+    <button class="start" data-start="activity">Checking activity</button>
+    <button class="start" data-start="compose">Sending a payment to Sam</button>
+    <button class="start" data-start="vague">An old payment with a vague note</button>
+
+    <h2>Tasks</h2>
+    <ol class="tasks">
+      <li>Find the September payment whose note mentions electricity. Note the amount.</li>
+      <li>Find out what you paid Sam for in August.</li>
+      <li>Send Sam a payment with a note you would recognize later. Then give Sam's Oct 2 payment, whose note just says "payment", a private memo, and find it again by searching.</li>
+    </ol>
+    <button class="reset" id="reset">&#8634; Start over</button>
+
+    <div class="fine">Sample data. No money is sent and no real account is used. Not made by or affiliated with Chase or Zelle.</div>
+  </aside>
+</div>
+
+<script>
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MON_FULL = {Jul:'July',Aug:'August',Sep:'September',Oct:'October',Nov:'November'};
+const SEND_AMT = 66.30;
+const MEMO_EXAMPLE = 'Oct electricity, my half. Bill was $128.20.';
+const SEED = [
+  {id:'tj',   d:'2026-10-08', name:"Trader Joe's", card:true, amt:-34.18, note:'', tag:''},
+  {id:'priya',d:'2026-10-06', name:'Priya',    amt:25.00,   note:'Concert tix', tag:'Other'},
+  {id:'oct2', d:'2026-10-02', name:'Sam',      amt:-64.10,  note:'payment', tag:'Utilities'},
+  {id:'rent', d:'2026-10-01', name:'Landlord', amt:-900.00, note:'October rent', tag:'Rent'},
+  {id:'wifi', d:'2026-09-15', name:'Sam',      amt:-40.00,  note:'Wifi', tag:'Utilities'},
+  {id:'sep',  d:'2026-09-02', name:'Sam',      amt:-62.40,  note:'Sept electricity, my half', tag:'Utilities'},
+  {id:'aug',  d:'2026-08-03', name:'Sam',      amt:-58.10,  note:'Aug electricity', tag:'Utilities'},
+  {id:'jul',  d:'2026-07-05', name:'Sam',      amt:-71.95,  note:'July elec + gas', tag:'Utilities'},
+];
+const AMOUNTS = {
+  under50: {label:'Under $50', test:a => a < 50},
+  mid:     {label:'$50 to $100', test:a => a >= 50 && a <= 100},
+  over100: {label:'Over $100', test:a => a > 100},
+};
+const TAGS = ['Rent','Utilities','Food','Other'];
+const VAGUE = ['payment','pmt','pymt','pay','money','zelle','sent','send','thanks','thank you','ty','for you','stuff','bill','here','this','that'];
+const DEPTH = {activity:0, detail:1, compose:1, memo:2, review:2, sending:3, sent:3};
+
+let S, lastView = null, flashId = null;
+function reset(){
+  S = {view:'activity', pay:SEED.map(p => ({memo:'', ...p})), q:'', person:null, month:null, amount:null,
+       sheet:null, cur:null, from:'activity', note:'', tag:null, skip:false};
+  lastView = null;
+}
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const monthOf = d => MON[+d.slice(5,7) - 1];
+const fmtDate = d => monthOf(d) + ' ' + (+d.slice(8,10));
+const fmtLong = d => fmtDate(d) + ', ' + d.slice(0,4);
+const money = a => (a < 0 ? '-' : '+') + '$' + Math.abs(a).toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2});
+const title = p => p.card ? p.name : (p.amt < 0 ? 'Zelle to ' : 'Zelle from ') + p.name;
+const byId = id => S.pay.find(p => p.id === id);
+const sorted = () => S.pay.slice().sort((a,b) => b.d.localeCompare(a.d));
+const isVague = n => { const t = n.trim().toLowerCase(); return t.length > 0 && (VAGUE.includes(t) || t.length < 3 || !/[a-z]/.test(t)); };
+
+function hl(text, q){
+  if (!q) return esc(text);
+  const lo = text.toLowerCase(), ql = q.toLowerCase();
+  let out = '', i = 0, j;
+  while ((j = lo.indexOf(ql, i)) !== -1){ out += esc(text.slice(i,j)) + '<mark>' + esc(text.slice(j, j+ql.length)) + '</mark>'; i = j + ql.length; }
+  return out + esc(text.slice(i));
+}
+
+// null = no match; otherwise where the query matched: 'text' (note or memo), 'name', 'amount'
+function matchWhere(p, q){
+  const ql = q.trim().toLowerCase();
+  if (!ql) return 'all';
+  if (p.note.toLowerCase().includes(ql) || p.memo.toLowerCase().includes(ql)) return 'text';
+  if (title(p).toLowerCase().includes(ql)) return 'name';
+  const qn = ql.replace(/[$,\s]/g,'');
+  if (/^\d+(\.\d*)?$/.test(qn) && Math.abs(p.amt).toFixed(2).startsWith(qn)) return 'amount';
+  return null;
+}
+function results(){
+  return sorted()
+    .filter(p => !S.person || (!p.card && p.name === S.person))
+    .filter(p => !S.month || monthOf(p.d) === S.month)
+    .filter(p => !S.amount || AMOUNTS[S.amount].test(Math.abs(p.amt)))
+    .map(p => ({p, where: matchWhere(p, S.q)}))
+    .filter(r => r.where);
+}
+
+/* ---------- Screen 1 and 2: checking activity, search, filters ---------- */
+function chip(type, label, active){
+  const name = type[0].toUpperCase() + type.slice(1);
+  return active
+    ? `<button class="chip on" data-act="sheet" data-arg="${type}">${esc(label)} <span class="x" data-act="clear" data-arg="${type}" aria-label="Clear ${name} filter">&times;</span></button>`
+    : `<button class="chip" data-act="sheet" data-arg="${type}">${name} <span class="caret">&#9660;</span></button>`;
+}
+function viewActivity(){
+  return `
+  <div class="top">
+    <div class="topbar"><span></span><span></span><button class="pill" data-act="compose">Send</button></div>
+    <div class="h1">Checking ...1234</div>
+    <div class="sub">$2,410.55 available</div>
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="none" stroke="#6b7079" stroke-width="1.8"/><line x1="11" y1="11" x2="15" y2="15" stroke="#6b7079" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <input id="q" type="search" autocomplete="off" placeholder="Search notes, people, amounts..." value="${esc(S.q)}" aria-label="Search activity">
+      <button class="clear" data-act="clearq" aria-label="Clear search" ${S.q ? '' : 'hidden'}>&times;</button>
+    </div>
+    <div class="chips">
+      ${chip('person', 'Person: ' + S.person, !!S.person)}
+      ${chip('date', MON_FULL[S.month] || S.month, !!S.month)}
+      ${chip('amount', S.amount ? AMOUNTS[S.amount].label : '', !!S.amount)}
+    </div>
+  </div>
+  <div class="count" id="count"></div>
+  <div class="scroll" id="list"></div>
+  ${S.sheet ? viewSheet() : ''}`;
+}
+function rowHTML(p){
+  const q = S.q.trim();
+  const amt = `<span class="${p.amt > 0 ? 'pos' : ''}">${money(p.amt)}</span>`;
+  const who = p.card ? hl(p.name, q) : (p.amt < 0 ? 'Zelle to ' : 'Zelle from ') + hl(p.name, q);
+  const sub = p.card ? '<span style="font-style:normal">Debit card</span>' : (p.note ? hl(p.note, q) : '<span style="font-style:normal">No note</span>');
+  return `<button class="row${p.id === flashId ? ' flash' : ''}" data-act="open" data-arg="${p.id}">
+    <div class="r1"><span>${who}</span>${amt}</div>
+    <div class="r2"><span class="note">${sub}</span><span class="date">${fmtDate(p.d)}</span></div>
+    ${p.memo ? `<div class="memo"><b>Memo:</b> ${hl(p.memo, q)}</div>` : ''}
+  </button>`;
+}
+function renderList(){
+  const rs = results();
+  const filtering = S.q.trim() || S.person || S.month || S.amount;
+  let c = '';
+  if (filtering){
+    c = rs.length === 1 ? '1 result' : rs.length + ' results';
+    if (S.q.trim() && rs.length && rs.every(r => r.where === 'text')) c += ' in notes and memos';
+  }
+  const count = $('#count');
+  count.textContent = c; count.style.display = filtering ? '' : 'none';
+  $('#list').innerHTML = rs.length ? rs.map(r => rowHTML(r.p)).join('')
+    : `<div class="empty">No payments match.<br><button class="link" style="font-size:15px;margin-top:8px" data-act="clearall">Clear search and filters</button></div>`;
+  const cl = document.querySelector('.search .clear'); if (cl) cl.hidden = !S.q;
+  flashId = null;
+}
+function viewSheet(){
+  let h = '', opts = '';
+  const zelle = sorted().filter(p => !p.card);
+  if (S.sheet === 'person'){
+    h = 'Person';
+    const names = [...new Set(zelle.map(p => p.name))];
+    opts = names.map(n => {
+      const k = zelle.filter(p => p.name === n).length;
+      return `<button class="opt" data-act="setperson" data-arg="${esc(n)}"><span class="av">${esc(n[0])}</span>${esc(n)}${S.person === n ? '<span class="tick">&#10003;</span>' : `<span class="meta">${k} payment${k > 1 ? 's' : ''}</span>`}</button>`;
+    }).join('');
+    if (S.person) opts = `<button class="opt clear" data-act="clear" data-arg="person">Any person</button>` + opts;
+  } else if (S.sheet === 'date'){
+    h = 'Date';
+    const months = [...new Set(sorted().map(p => monthOf(p.d)))];
+    opts = months.map(m => `<button class="opt" data-act="setmonth" data-arg="${m}">${MON_FULL[m] || m} 2026${S.month === m ? '<span class="tick">&#10003;</span>' : ''}</button>`).join('');
+    if (S.month) opts = `<button class="opt clear" data-act="clear" data-arg="date">Any date</button>` + opts;
+  } else {
+    h = 'Amount';
+    opts = Object.entries(AMOUNTS).map(([k,v]) => `<button class="opt" data-act="setamount" data-arg="${k}">${v.label}${S.amount === k ? '<span class="tick">&#10003;</span>' : ''}</button>`).join('');
+    if (S.amount) opts = `<button class="opt clear" data-act="clear" data-arg="amount">Any amount</button>` + opts;
+  }
+  return `<div class="backdrop" data-act="closesheet"><div class="sheet" role="dialog" aria-label="${h} filter"><div class="grab"></div><h3>${h}</h3>${opts}</div></div>`;
+}
+
+/* ---------- Screen 3: transaction detail ---------- */
+function viewDetail(){
+  const p = byId(S.cur);
+  const who = p.card ? p.name : (p.amt < 0 ? 'To ' : 'From ') + p.name;
+  let body;
+  if (p.card){
+    body = `<div class="card"><div class="lbl">Type</div><div class="val">Debit card purchase</div></div>`;
+  } else {
+    body = `
+      <div class="card"><div class="lbl">Note (${p.amt < 0 ? esc(p.name) + ' saw this' : 'from ' + esc(p.name)})</div><div class="val it">${p.note ? esc(p.note) : 'No note'}</div></div>
+      ${p.tag ? `<div class="card"><div class="lbl">Purpose tag</div><div class="val">${esc(p.tag)}</div></div>` : ''}
+      ${p.memo
+        ? `<div class="card"><div class="lbl">Private memo (only you see this)</div><div class="val">${esc(p.memo)}</div>
+             <button class="link" style="font-size:15px;margin-top:8px" data-act="memo">Edit memo</button></div>`
+        : `<button class="btn secondary" data-act="memo">+ Add private memo</button>
+           ${isVague(p.note) ? `<div class="tip">This note doesn't say much. A private memo lets you add what it was for, and search will find it.</div>` : ''}`}
+      <div style="text-align:center;margin-top:16px"><button class="link" data-act="zelle">View in Zelle &rsaquo;</button></div>`;
+  }
+  return `
+  <div class="top"><div class="topbar"><button class="link" data-act="back">&lsaquo; Activity</button><span class="title">Payment details</span><span></span></div></div>
+  <div class="scroll pad">
+    <div class="hero"><div class="av lg">${esc(p.name[0])}</div>
+      <div class="amt-big ${p.amt > 0 ? 'pos' : ''}">${money(p.amt)}</div>
+      <div style="font-size:17px">${esc(who)}</div>
+      <div class="sub">${fmtLong(p.d)} &middot; Completed</div></div>
+    ${body}
+  </div>`;
+}
+
+/* ---------- Screen 5: private memo ---------- */
+function viewMemo(){
+  const p = byId(S.cur);
+  return `
+  <div class="top"><div class="topbar"><button class="link" data-act="memocancel">Cancel</button><span class="title">Private memo</span><button class="link" style="font-weight:600" data-act="memosave">Save</button></div></div>
+  <div class="scroll pad">
+    <div class="sub" style="margin:4px 0 12px">Only you can see this. Search includes it.</div>
+    <textarea id="memo" class="field" placeholder="e.g., ${esc(MEMO_EXAMPLE)}" aria-label="Private memo">${esc(p.memo)}</textarea>
+    <div class="card" style="margin-top:14px"><div class="lbl">For</div>
+      <div class="val">${esc(title(p))} &middot; ${money(p.amt)} &middot; ${fmtDate(p.d)}</div>
+      <div class="sub" style="margin-top:4px">Note: <i>${p.note ? esc(p.note) : 'none'}</i></div></div>
+  </div>`;
+}
+
+/* ---------- Screen 4: send with Note Assist ---------- */
+function lastGoodNote(){
+  const p = S.pay.filter(p => p.name === 'Sam' && !p.card && p.amt < 0 && p.note && !isVague(p.note) && /electric/i.test(p.note))
+                 .sort((a,b) => b.d.localeCompare(a.d))[0];
+  return p ? p.note : '';
+}
+const toNov = n => n.replace(/\b(Jan|Feb|Mar|Apr|May|June?|July?|Aug|Sept?|Oct|Nov|Dec)[a-z]*\b/i, 'Nov');
+function assistHTML(){
+  const n = S.note;
+  if (!n.trim()){
+    const last = lastGoodNote();
+    return `
+      <div class="lbl" style="margin-top:12px">Suggested from past notes to Sam</div>
+      <div class="chips" style="margin-top:4px">
+        ${['Nov electricity','Nov wifi','Rent'].map(s => `<button class="chip" data-act="sugg" data-arg="${s}">${s}</button>`).join('')}
+      </div>
+      ${last ? `<button class="same" data-act="same"><b>&#8635; Same as last time</b><span>${esc(last)} &rarr; ${esc(toNov(last))}</span></button>` : ''}`;
+  }
+  if (isVague(n) && !S.skip){
+    return `<div class="hint">Add a detail you'll want later? Try: <button data-act="sugg" data-arg="Nov electricity">Nov electricity</button><button class="skip" data-act="skip">Skip</button></div>`;
+  }
+  return '';
+}
+function viewCompose(){
+  return `
+  <div class="top"><div class="topbar"><button class="link" data-act="back">Cancel</button><span class="title">Send to Sam</span><span></span></div></div>
+  <div class="scroll pad">
+    <div class="hero" style="padding-bottom:10px"><div class="av lg">S</div><div style="font-size:17px">Sam</div><div class="amt-big">$${SEND_AMT.toFixed(2)}</div></div>
+    <div class="lbl">Note (Sam will see this)</div>
+    <input id="note" class="field" type="text" autocomplete="off" placeholder="e.g., Nov electricity, my half" value="${esc(S.note)}" aria-label="Note">
+    <div id="assist">${assistHTML()}</div>
+    <div class="section"><div class="lbl">Purpose (optional)</div>
+      <div class="chips" style="margin-top:4px">${TAGS.map(t => `<button class="chip ${S.tag === t ? 'on' : ''}" data-act="tag" data-arg="${t}">${t}</button>`).join('')}</div></div>
+  </div>
+  <div class="foot"><button class="btn" data-act="review">Review</button></div>`;
+}
+function viewReview(){
+  return `
+  <div class="top"><div class="topbar"><button class="link" data-act="edit">&lsaquo; Edit</button><span class="title">Review</span><span></span></div></div>
+  <div class="scroll pad">
+    <div class="kv"><span>To</span><span>Sam</span></div>
+    <div class="kv"><span>Amount</span><span>$${SEND_AMT.toFixed(2)}</span></div>
+    <div class="kv"><span>Note</span><span><i>${S.note.trim() ? esc(S.note.trim()) : 'None'}</i></span></div>
+    <div class="kv"><span>Purpose</span><span>${S.tag || 'None'}</span></div>
+    <div class="kv"><span>From</span><span>Checking ...1234</span></div>
+  </div>
+  <div class="foot"><button class="btn" data-act="confirm">Send $${SEND_AMT.toFixed(2)}</button></div>`;
+}
+function viewSending(){
+  return `<div class="done"><div class="spinner"></div><div class="title">Sending $${SEND_AMT.toFixed(2)} to Sam</div><div class="sub">This only takes a moment.</div></div>`;
+}
+function viewSent(){
+  const p = byId(S.cur);
+  return `
+  <div class="done"><div class="check">&#10003;</div><div class="h1">Sent</div>
+    <div style="font-size:17px">$${SEND_AMT.toFixed(2)} to Sam</div>
+    <div class="sub"><i>${p.note ? esc(p.note) : 'No note'}</i>${p.tag ? ' &middot; ' + esc(p.tag) : ''}</div>
+    <div class="tip">You can search for this payment later by its note, Sam's name, or the amount.</div></div>
+  <div class="foot"><button class="btn" data-act="done">Done</button></div>`;
+}
+
+/* ---------- Rendering and actions ---------- */
+const VIEWS = {activity:viewActivity, detail:viewDetail, memo:viewMemo, compose:viewCompose, review:viewReview, sending:viewSending, sent:viewSent};
+function render(){
+  let anim = '';
+  if (lastView !== null && lastView !== S.view){
+    const a = DEPTH[lastView], b = DEPTH[S.view];
+    anim = S.view === 'compose' && lastView === 'activity' ? 'up' : b > a ? 'push' : b < a ? 'pop' : 'fade';
+  }
+  lastView = S.view;
+  $('#screen').innerHTML = `<div class="view ${anim}">${VIEWS[S.view]()}</div>`;
+  if (S.view === 'activity') renderList();
+  if (S.view === 'memo' && !document.body.classList.contains('shot')) $('#memo').focus();
+  document.querySelectorAll('.start').forEach(b => b.classList.toggle('on', b.dataset.start === S.from));
+}
+function toast(msg){
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  $('#screen').appendChild(t); setTimeout(() => t.remove(), 1700);
+}
+function clearCompose(){ S.note = ''; S.tag = null; S.skip = false; }
+const ACT = {
+  sheet: a => { S.sheet = a; render(); },
+  closesheet: () => { S.sheet = null; render(); },
+  clear: a => { if (a === 'person') S.person = null; if (a === 'date') S.month = null; if (a === 'amount') S.amount = null; S.sheet = null; render(); },
+  clearall: () => { S.q = ''; S.person = S.month = S.amount = null; render(); },
+  setperson: a => { S.person = a; S.sheet = null; render(); },
+  setmonth: a => { S.month = a; S.sheet = null; render(); },
+  setamount: a => { S.amount = a; S.sheet = null; render(); },
+  clearq: () => { S.q = ''; const i = $('#q'); i.value = ''; renderList(); i.focus(); },
+  open: a => { S.cur = a; S.view = 'detail'; render(); },
+  back: () => { S.view = 'activity'; S.from = 'activity'; clearCompose(); render(); },
+  memo: () => { S.view = 'memo'; render(); },
+  memocancel: () => { S.view = 'detail'; render(); },
+  memosave: () => { byId(S.cur).memo = $('#memo').value.trim(); S.view = 'detail'; render(); toast('Memo saved. Search includes it now.'); },
+  zelle: () => toast('Opens this payment in Zelle activity'),
+  compose: () => { S.view = 'compose'; S.from = 'compose'; clearCompose(); render(); },
+  sugg: a => { S.note = a; render(); },
+  same: () => { S.note = toNov(lastGoodNote()); S.tag = 'Utilities'; render(); },
+  skip: () => { S.skip = true; $('#assist').innerHTML = assistHTML(); },
+  tag: a => { S.tag = S.tag === a ? null : a; render(); },
+  review: () => { S.view = 'review'; render(); },
+  edit: () => { S.view = 'compose'; render(); },
+  confirm: () => {
+    S.view = 'sending'; render();
+    setTimeout(() => {
+      const p = {id:'new' + Date.now(), d:'2026-11-08', name:'Sam', amt:-SEND_AMT, note:S.note.trim(), tag:S.tag || '', memo:''};
+      S.pay.push(p); S.cur = p.id; S.view = 'sent'; render();
+    }, 1300);
+  },
+  done: () => { flashId = S.cur; S.view = 'activity'; S.from = 'activity'; clearCompose(); S.q = ''; S.person = S.month = S.amount = null; render(); },
+};
+$('#screen').addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  if (el.dataset.act === 'closesheet' && e.target !== el) return; // clicks inside the sheet itself
+  e.stopPropagation();
+  ACT[el.dataset.act](el.dataset.arg);
+});
+$('#screen').addEventListener('input', e => {
+  if (e.target.id === 'q'){ S.q = e.target.value; renderList(); }
+  if (e.target.id === 'note'){ S.note = e.target.value; $('#assist').innerHTML = assistHTML(); }
+});
+$('#screen').addEventListener('keydown', e => {
+  if (e.key === 'Escape' && S.sheet){ S.sheet = null; render(); }
+  if (e.key === 'Enter' && e.target.id === 'note'){ ACT.review(); }
+});
+
+// Side panel: start points and reset
+document.querySelectorAll('.start').forEach(b => b.addEventListener('click', () => {
+  const keep = S.pay;   // keep anything the user already sent or wrote
+  reset(); S.pay = keep;
+  if (b.dataset.start === 'compose'){ S.view = 'compose'; S.from = 'compose'; }
+  if (b.dataset.start === 'vague'){ S.view = 'detail'; S.cur = 'oct2'; S.from = 'vague'; }
+  lastView = 'activity'; render();
+}));
+$('#reset').addEventListener('click', () => { reset(); render(); });
+
+/* Presets for paper screenshots: index.html?shot#sam-aug */
+const PRESETS = {
+  'sam-aug':          () => { S.person = 'Sam'; S.month = 'Aug'; },
+  'person-sheet':     () => { S.sheet = 'person'; },
+  'search-elec':      () => { S.q = 'elec'; },
+  'search-elec-memo': () => { byId('oct2').memo = MEMO_EXAMPLE; S.q = 'elec'; },
+  'detail-vague':     () => { S.view = 'detail'; S.cur = 'oct2'; },
+  'detail-memo':      () => { byId('oct2').memo = MEMO_EXAMPLE; S.view = 'detail'; S.cur = 'oct2'; },
+  'send-empty':       () => { S.view = 'compose'; },
+  'send-vague':       () => { S.view = 'compose'; S.note = 'payment'; S.tag = 'Utilities'; },
+};
+if (new URLSearchParams(location.search).has('shot')) document.body.classList.add('shot');
+reset();
+const pre = PRESETS[location.hash.slice(1)]; if (pre) pre();
+render();
+</script>
+</body>
+</html>
