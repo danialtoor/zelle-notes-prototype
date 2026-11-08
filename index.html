@@ -175,7 +175,7 @@ textarea.field{height:140px;resize:none;line-height:1.4}
     <h2>Your three tasks</h2>
     <label class="task"><input type="checkbox"><span class="tick">&#10003;</span><span class="txt"><span class="n">1</span>Find the September payment whose note mentions electricity, and note the amount.</span></label>
     <label class="task"><input type="checkbox"><span class="tick">&#10003;</span><span class="txt"><span class="n">2</span>Find out what you paid Sam for in August.</span></label>
-    <label class="task"><input type="checkbox"><span class="tick">&#10003;</span><span class="txt"><span class="n">3</span>You owe Sam $66.30 for your half of November's electricity. Send it with a note you'd recognize later. Then add a private memo to Sam's Oct&nbsp;2 payment (its note just says "payment") and find it again by searching.</span></label>
+    <label class="task"><input type="checkbox"><span class="tick">&#10003;</span><span class="txt"><span class="n">3</span>You owe Sam $66.30 for your half of November's electricity. Send it with a note you'd recognize later. Then clarify Sam's Oct&nbsp;2 payment (its note just says "payment") and find it again by searching.</span></label>
 
     <h2>Shortcuts</h2>
     <p class="jump-help">Jump straight to a screen. The tag on each one shows which task it helps with.</p>
@@ -303,7 +303,7 @@ function rowHTML(p){
   return `<button class="row${p.id === flashId ? ' flash' : ''}" data-act="open" data-arg="${p.id}">
     <div class="r1"><span>${who}</span>${amt}</div>
     <div class="r2"><span class="note">${sub}</span><span class="date">${fmtDate(p.d)}</span></div>
-    ${p.memo ? `<div class="memo"><b>Memo:</b> ${hl(p.memo, q)}</div>` : ''}
+    ${p.memo ? `<div class="memo"><b>Clarified:</b> ${hl(p.memo, q)}</div>` : ''}
   </button>`;
 }
 function renderList(){
@@ -312,7 +312,7 @@ function renderList(){
   let c = '';
   if (filtering){
     c = rs.length === 1 ? '1 result' : rs.length + ' results';
-    if (S.q.trim() && rs.length && rs.every(r => r.where === 'text')) c += ' in notes and memos';
+    if (S.q.trim() && rs.length && rs.every(r => r.where === 'text')) c += ' in notes and clarifications';
   }
   const count = $('#count');
   count.textContent = c; count.style.display = filtering ? '' : 'none';
@@ -357,10 +357,10 @@ function viewDetail(){
       <div class="card"><div class="lbl">Note (${p.amt < 0 ? esc(p.name) + ' saw this' : 'from ' + esc(p.name)})</div><div class="val it">${p.note ? esc(p.note) : 'No note'}</div></div>
       ${p.tag ? `<div class="card"><div class="lbl">Purpose tag</div><div class="val">${esc(p.tag)}</div></div>` : ''}
       ${p.memo
-        ? `<div class="card"><div class="lbl">Private memo (only you see this)</div><div class="val">${esc(p.memo)}</div>
-             <button class="link" style="font-size:15px;margin-top:8px" data-act="memo">Edit memo</button></div>`
-        : `<button class="btn secondary" data-act="memo">+ Add private memo</button>
-           ${isVague(p.note) ? `<div class="tip">This note doesn't say much. A private memo lets you add what it was for, and search will find it.</div>` : ''}`}
+        ? `<div class="card"><div class="lbl">Your clarification (only you see this)</div><div class="val">${esc(p.memo)}</div>
+             <button class="link" style="font-size:15px;margin-top:8px" data-act="memo">Edit clarification</button></div>`
+        : `<button class="btn secondary" data-act="memo">+ Clarify this note</button>
+           ${isVague(p.note) ? `<div class="tip">This note doesn't say much. Clarify it so you'll know later what it was for. ${esc(p.name)} won't see it, and search will find it.</div>` : ''}`}
       <div style="text-align:center;margin-top:16px"><button class="link" data-act="zelle">View in Zelle &rsaquo;</button></div>`;
   }
   return `
@@ -378,10 +378,10 @@ function viewDetail(){
 function viewMemo(){
   const p = byId(S.cur);
   return `
-  <div class="top"><div class="topbar"><button class="link" data-act="memocancel">Cancel</button><span class="title">Private memo</span><button class="link" style="font-weight:600" data-act="memosave">Save</button></div></div>
+  <div class="top"><div class="topbar"><button class="link" data-act="memocancel">Cancel</button><span class="title">Clarify this note</span><button class="link" style="font-weight:600" data-act="memosave">Save</button></div></div>
   <div class="scroll pad">
-    <div class="sub" style="margin:4px 0 12px">Only you can see this. Search includes it.</div>
-    <textarea id="memo" class="field" placeholder="e.g., ${esc(MEMO_EXAMPLE)}" aria-label="Private memo">${esc(p.memo)}</textarea>
+    <div class="sub" style="margin:4px 0 12px">Only you see this. ${esc(p.name)} still sees the original note. Search includes it.</div>
+    <textarea id="memo" class="field" placeholder="e.g., ${esc(MEMO_EXAMPLE)}" aria-label="Clarification">${esc(p.memo)}</textarea>
     <div class="card" style="margin-top:14px"><div class="lbl">For</div>
       <div class="val">${esc(title(p))} &middot; ${money(p.amt)} &middot; ${fmtDate(p.d)}</div>
       <div class="sub" style="margin-top:4px">Note: <i>${p.note ? esc(p.note) : 'none'}</i></div></div>
@@ -494,7 +494,7 @@ const ACT = {
   back: () => { S.view = 'activity'; S.from = 'activity'; clearCompose(); render(); },
   memo: () => { S.view = 'memo'; render(); },
   memocancel: () => { S.view = 'detail'; render(); },
-  memosave: () => { byId(S.cur).memo = $('#memo').value.trim(); S.view = 'detail'; render(); toast('Memo saved. Search includes it now.'); },
+  memosave: () => { byId(S.cur).memo = $('#memo').value.trim(); S.view = 'detail'; render(); toast('Saved. Search includes it now.'); },
   zelle: () => toast('Opens this payment in Zelle activity'),
   compose: () => { S.view = 'compose'; S.from = 'compose'; clearCompose(); render(); },
   sugg: a => { S.note = a; render(); },
