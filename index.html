@@ -139,7 +139,10 @@ mark{background:var(--mark);color:inherit;border-radius:2px;padding:0 1px}
 .notewrap{position:relative}
 .ghost{position:absolute;inset:0;display:flex;align-items:center;padding:0 14px;border:1px solid transparent;font-size:16px;color:#9aa0a8;pointer-events:none;white-space:pre;overflow:hidden}
 .ghost .typed{visibility:hidden}
-.ghost .key{margin-left:auto;padding:1px 7px;font-size:11px;color:var(--muted);background:#fff;border:1px solid #d6d8de;border-radius:5px}
+.ghost .key{margin-left:auto;padding:1px 7px;font:inherit;font-size:11px;color:var(--muted);background:#fff;border:1px solid #d6d8de;border-radius:5px;pointer-events:auto;cursor:pointer}
+.ghost .key:hover{border-color:var(--accent);color:var(--accent)}
+.ghost .touch{display:none}
+@media (hover:none) and (pointer:coarse){.ghost .kb,.kb-only{display:none}.ghost .touch{display:inline}.ghost .key{padding:5px 10px;font-size:13px;color:var(--accent);border-color:var(--accent)}}
 textarea.field{height:140px;resize:none;line-height:1.4}
 .same{display:block;width:100%;text-align:left;margin-top:10px;border:1px solid #d6d8de;background:var(--soft);border-radius:12px;padding:10px 14px;font:inherit;cursor:pointer;color:var(--ink)}
 .same:hover{border-color:#b9bcc5}
@@ -401,7 +404,7 @@ function assistHTML(){
       <div class="chips" style="margin-top:4px">
         ${['Nov electricity','Nov wifi','Rent'].map(s => `<button class="chip" data-act="sugg" data-arg="${s}">${s}</button>`).join('')}
       </div>
-      ${last ? `<button class="same" data-act="same"><b>&#8635; Same as last time</b><span>Tap to fill in "${esc(toNov(last))}", or press the &rarr; key in the note box</span></button>` : ''}`;
+      ${last ? `<button class="same" data-act="same"><b>&#8635; Same as last time</b><span>Tap to fill in "${esc(toNov(last))}"<span class="kb-only">, or press the &rarr; key in the note box</span></span></button>` : ''}`;
   }
   if (isVague(n) && !S.skip){
     return `<div class="hint">Add a detail you'll want later? Try: <button data-act="sugg" data-arg="Nov electricity">Nov electricity</button><button class="skip" data-act="skip">Skip</button></div>`;
@@ -412,9 +415,9 @@ function assistHTML(){
 function ghostHTML(){
   const sug = toNov(lastGoodNote()), n = S.note;
   if (!sug) return '';
-  if (!n) return `${esc(sug)}<span class="key">&rarr; to fill</span>`;
+  if (!n) return `${esc(sug)}<button class="key" data-act="same" tabindex="-1"><span class="kb">&rarr; to fill</span><span class="touch">Tap to fill</span></button>`;
   if (sug.toLowerCase().startsWith(n.toLowerCase()) && n.length < sug.length)
-    return `<span class="typed">${esc(n)}</span>${esc(sug.slice(n.length))}<span class="key">&rarr;</span>`;
+    return `<span class="typed">${esc(n)}</span>${esc(sug.slice(n.length))}<button class="key" data-act="same" tabindex="-1"><span class="kb">&rarr;</span><span class="touch">Fill</span></button>`;
   return '';
 }
 function acceptGhost(){
