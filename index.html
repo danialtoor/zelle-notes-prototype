@@ -175,7 +175,6 @@ textarea.field{height:140px;resize:none;line-height:1.4}
     <div class="jumps">
       <button class="jump" data-start="activity"><span class="jn">A</span>Checking activity<span class="for">Tasks 1, 2</span></button>
       <button class="jump" data-start="compose"><span class="jn">B</span>Send to Sam<span class="for">Task 3</span></button>
-      <button class="jump" data-start="vague"><span class="jn">C</span>The Oct 2 payment<span class="for">Task 3</span></button>
     </div>
     <button class="resetbtn" id="reset">Reset the demo</button>
 
@@ -514,8 +513,7 @@ document.querySelectorAll('.jump').forEach(b => b.addEventListener('click', () =
   const keep = S.pay;   // keep anything the user already sent or wrote
   reset(); S.pay = keep;
   if (b.dataset.start === 'compose'){ S.view = 'compose'; S.from = 'compose'; }
-  if (b.dataset.start === 'vague'){ S.view = 'detail'; S.cur = 'oct2'; S.from = 'vague'; }
-  lastView = 'activity'; render();
+    lastView = 'activity'; render();
 }));
 $('#reset').addEventListener('click', () => { reset(); render(); });
 document.querySelectorAll('.task input').forEach(i => i.addEventListener('change', () => i.closest('.task').classList.toggle('done', i.checked)));
